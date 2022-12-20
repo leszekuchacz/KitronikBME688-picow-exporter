@@ -8,8 +8,8 @@ Prometheus exporter to exponse metrics like temperature, pressure, humidity, Air
 Name     | Description | Cost
 ---------|-------------|----
 KitronikBME688 |  | 
-Power Supply 5VAC or usb | *on usb  the zled dosent works |
-Raspberry pico W | *on usb  the zled dosent works | 
+Power Supply 5VAC or usb | *on usb the zled dosent works |
+Raspberry pico W | | 
 
 ## Installation
 
