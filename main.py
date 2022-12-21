@@ -50,7 +50,7 @@ def webserver(connection):
         client.send("HTTP/1.0 200 OK\r\nContent-type: text/plain; version=0.0.4; charset=utf-8\r\n\r\n")
         client.send(html)
         client.close()
-        print("Close connection from". addr)
+        print("Close connection from", addr)
 
 def oled_display():
     if config.oled is True:
