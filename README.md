@@ -16,7 +16,8 @@ Raspberry pico W | |
 1. 
 
 ## Use Case
-
+1. Integration with [Rasbeery pi 4 with grove pi stack](https://github.com/leszekuchacz/prometheus-on-raspberrypi-for-grovepi)
+![Diagram](https://raw.githubusercontent.com/leszekuchacz/KitronikBME688-picow-exporter/main/docs/prometheus%2Bgrafana-three-KitronikBME688.drawio.png)
 ## Troubleshooting 
 
 ### Raspberry Pico W dosent respond.
