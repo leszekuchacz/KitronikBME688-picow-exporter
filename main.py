@@ -1,6 +1,7 @@
 from PicoAirQuality import KitronikBME688, KitronikOLED, KitronikRTC, KitronikButton, KitronikBuzzer, KitronikZIPLEDs
 import time,network,socket, machine, _thread, utime
 import config
+import urequests,ujson
 
 def wifi():
     wlan = network.WLAN(network.STA_IF)
@@ -22,18 +23,22 @@ def wifi():
 
 def open_socket():
     # Open a socket
-    print("Binding socket on "+config.host+" port "+str(config.port))
-    address = (config.host, config.port)
+    print("Binding socket on "+config.webserver_host+" port "+str(config.webserver_port))
+    address = (config.webserver_host, config.webserver_port)
     connection = socket.socket()
     connection.bind(address)
     connection.listen(1)
     return connection
 
 def webserver(connection):
+    global reset_timer
     while True:
         print("Waiting for connection")
         client,addr = connection.accept()
         print("Connection accept from", addr)
+        
+        #print(utime.ticks_diff(start,utime.ticks_us()))
+        
         request = client.recv(1024)
         request = str(request)
         try:
@@ -49,20 +54,32 @@ def webserver(connection):
         html=t+"\n"+p+"\n"+h+"\n"+a+"\n"+c
         client.send("HTTP/1.0 200 OK\r\nContent-type: text/plain; version=0.0.4; charset=utf-8\r\n\r\n")
         client.send(html)
-        client.close()
         print("Close connection from", addr)
+        client.close()
+        reset_timer=0
+    
+        
+        
 
-def oled_display():
+def oled_display(timer):
     if config.oled is True:
-        bme688.measureData()
         oled.poweron()
-        oled.clear()
-        oled.displayText("Temp: " + str(bme688.readTemperature()) + " C", 1)
-        oled.displayText("Pres: " + str(bme688.readPressure()) + " Pa", 2)
-        oled.displayText("Hum: " + str(bme688.readHumidity()) + " %", 3)
-        oled.displayText("IAQ: " + str(bme688.getAirQualityScore()), 4)
-        oled.displayText("eCO2: " + str(bme688.readeCO2()) + " ppm", 5)
-        oled.show()
+        if (timer>=10 and timer<=25 or timer>=45 and timer<=58 or timer>=75 and timer<=85 or  timer>=100 and timer<=115):
+            oled.clear()
+            oled.drawRect(4, 5, 120, 35)
+            oled.displayText(rtc.readDateString(), 2, 25)
+            oled.displayText(rtc.readTimeString(), 3, 33)
+            oled.show()
+        else:    
+            bme688.measureData()
+
+            oled.clear()
+            oled.displayText("Temp: " + str(bme688.readTemperature()) + " C", 1)
+            oled.displayText("Pres: " + str(bme688.readPressure()) + " Pa", 2)
+            oled.displayText("Hum: " + str(bme688.readHumidity()) + " %", 3)
+            oled.displayText("IAQ: " + str(bme688.getAirQualityScore()), 4)
+            oled.displayText("eCO2: " + str(bme688.readeCO2()) + " ppm", 5)
+            oled.show()
     else:
         oled.poweroff()
         
@@ -102,35 +119,76 @@ threadlock = _thread.allocate_lock()
 def thread_second():
     while True:
         threadlock.acquire()
-        oled_display()
+        oled_display(reset_timer)
         buttons.buttonA.irq(trigger=machine.Pin.IRQ_RISING, handler=ButtonA_IRQHandler)
         buttons.buttonB.irq(trigger=machine.Pin.IRQ_RISING, handler=ButtonB_IRQHandler)
         utime.sleep(1)
         threadlock.release()
+        #print(reset_timer)
+        if config.webserver_heartbeat!=0 and reset_timer>=config.webserver_heartbeat:
+            print("reset_timer: "+str(reset_timer)+" webserver_heartbeat: "+str(config.webserver_heartbeat))
+            print("Reset machine due to exceeding webserver_heartbeat time")
+            machine.reset()
+            
+
+reset_timer = 0
+def interruption_handler(pin):
+    global reset_timer
+    reset_timer += 1 
+
+def sync_time_via_http():
+    # expecting this json body in request {"datetime":"2023-04-20T19:00:21.664729+02:00"}
+    req=urequests.get(config.rtctime_sync_http_url)
+    date=req.json()
+    print(date['datetime'])
+    date1=date['datetime'].rsplit('-',2)
+    date2=date1[2].rsplit('T',2)
+    date3=date2[1].rsplit(':',4)
+    date4=date3[2].rsplit('.',2)
+
+    year=int(date1[0])
+    month=int(date1[1])
+    day=int(date2[0])
+    hour=int(date3[0])
+    minute=int(date3[1])
+    second=int(date4[0])
+
+    rtc.setDate(int(day), int(month),int(year))
+    rtc.setTime(int(hour), int(minute), int(second))
+    print("Sync_time_via_http done.")
+    req.close()
 
 ###   MAIN   ###
-print("Starting setup BME688")
+soft_timer = machine.Timer(mode=machine.Timer.PERIODIC, period=1000, callback=interruption_handler)      
+
+
+print("Starting setup BME688.")
 bme688 = KitronikBME688()
 oled = KitronikOLED()
 rtc = KitronikRTC()
 buzzer = KitronikBuzzer()
 buttons = KitronikButton()
 zipleds = KitronikZIPLEDs(3)
-# todo get time from ntp
-#rtc.setDate(19, 12, 2022)
-#rtc.setTime(01, 20, 00)
-#rtc.setAlarm(14, 1)
-print("Setup KitronikBME688 Gas Sensor")
+print("Starting KitronikBME688 Gas Sensor.")
 bme688.setupGasSensor()
-print("Setting KitronikBME688 Baseline.")
+print("Starting KitronikBME688 Baseline.")
 bme688.calcBaselines()
+print("Starting wifi.")
 wifi()
+print("Starting sync time via http api.")
+time.sleep(1)
+sync_time_via_http()
+# todo alarm 
+#rtc.setAlarm(14, 1)
+
+##
 connection=open_socket()
 print("Starting input thread")
 # picow W has 2 cores, first is used for connect waiting(webserver), second for input waiting(second_thred)
 _thread.start_new_thread(thread_second, ())
 print("Starting webserver")
 webserver(connection)
+
 
 
 

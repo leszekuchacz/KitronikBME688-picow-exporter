@@ -1,6 +1,11 @@
 wifi_ssid="wifi name"
 wifi_password="wifi password"
 wifi_timeout=10
+webserver_host="0.0.0.0"
+webserver_port=80
+webserver_heartbeat=300
+rtctime_sync_type="http"
+rtctime_sync_http_url="http://worldtimeapi.org/api/timezone/Europe/Warsaw"
 host="0.0.0.0"
 port=80
 oled=True
