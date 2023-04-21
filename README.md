@@ -1,15 +1,15 @@
 # KitronikBME688-picow-exporter
 
 Prometheus exporter to exponse metrics like temperature, pressure, humidity, AirQualityScore and eCo2 from KitronikBME688 + Raspberry pico W. 
-
+<img src="https://raw.githubusercontent.com/leszekuchacz/KitronikBME688-picow-exporter/main/docs/KitronikBME688-picow-exporter-with-power-supply.png"  width="300" height="300">
 
 ## Requirement 
 
-Name     | Description | Cost| Link|
----------|-------------|------------
-Air Quality Datalogging Board - Kitronik 5336 - BME688| 55$  | Complete air monitoring and reporting solution for the Raspberry Pi Pico |https://kitronik.co.uk/blogs/resources/pico-smart-air-quality-board-using-the-bme688-sensor|
-Power Supply 5VAC or usb | *on usb the zled dosent works | 10$ | |
-Raspberry pico W | |10$ | |
+|Name     | Description | Cost| Link|
+|---------|-------------|-----|------|
+|Air Quality Datalogging Board - Kitronik 5336 - BME688|  Complete air monitoring and reporting solution for the Raspberry Pi Pico| 55$ | |https://kitronik.co.uk/blogs/resources/pico-smart-air-quality-board-using-the-bme688-sensor|
+|Power Supply 5VAC or usb | *on usb the zled dosent works | 10$ | |
+|Raspberry pico W | |10$ | |
 
 ## Installation
 *if this your first run with pico w, you need to do this first https://projects.raspberrypi.org/en/projects/get-started-pico-w
