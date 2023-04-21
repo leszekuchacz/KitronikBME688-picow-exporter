@@ -1,6 +1,7 @@
 # KitronikBME688-picow-exporter
 
 Prometheus exporter to exponse metrics like temperature, pressure, humidity, AirQualityScore and eCo2 from KitronikBME688 + Raspberry pico W. 
+
 <img src="https://raw.githubusercontent.com/leszekuchacz/KitronikBME688-picow-exporter/main/docs/KitronikBME688-picow-exporter-with-power-supply.png"  width="300" height="300">
 
 ## Requirement 
